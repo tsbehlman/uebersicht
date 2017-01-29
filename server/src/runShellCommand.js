@@ -1,13 +1,15 @@
-const post = require('superagent').post;
-
 module.exports = function runShellCommand(command, callback) {
-  return post('/run/')
-    .send(command)
-    .end((err, res) => {
-      if (callback) {
-        const error = err ? res.text || 'error running command' : null;
-        const output = res.text;
-        callback(error, output);
+  let xhr = new XMLHttpRequest();
+  xhr.open('POST', '/run/', true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        callback(null, xhr.responseText);
       }
-    });
+      else {
+        callback(xhr.responseText || 'error running command', xhr.responseText);
+      }
+    } 
+  };
+  xhr.send(command);
 };

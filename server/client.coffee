@@ -1,6 +1,3 @@
-redux = require 'redux'
-window.$ = require 'jquery'
-
 reducer = require './src/reducer'
 listenToRemote = require './src/listen'
 sharedSocket = require './src/SharedSocket'
@@ -26,22 +23,28 @@ init = ->
   window.addEventListener 'contextmenu', (e) ->
     e.preventDefault()
 
+  window.state = undefined
+
   getState (err, initialState) ->
     bail err, 10000 if err?
-
-    store = redux.createStore(reducer, initialState)
-    render(store.getState(), screenId, contentEl)
-
-    store.subscribe ->
-      render(store.getState(), screenId, contentEl)
-
+    window.state = initialState
+    render(window.state, screenId, contentEl)
+    
     listenToRemote (action) ->
-      store.dispatch(action)
+      window.state = reducer(window.state, action);
+      render(window.state, screenId, contentEl)
 
 getState = (callback) ->
-  $.get("/state/")
-    .done((response) -> callback null, JSON.parse(response))
-    .fail -> callback response, null
+  xhr = new XMLHttpRequest();
+  xhr.open 'GET', '/state/', true
+  xhr.responseType = 'json'
+  xhr.send()
+  xhr.onreadystatechange = () ->
+    if (xhr.readyState == 4)
+       if (xhr.status >= 200 && xhr.status < 400)
+          callback null, xhr.response
+       else
+          callback xhr.responseText, null
 
 bail = (err, timeout = 0) ->
   console.log err if err?

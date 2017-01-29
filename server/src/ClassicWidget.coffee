@@ -1,6 +1,3 @@
-$ = require('jquery')
-window.jQuery = $
-
 Timer = require('./Timer')
 runCommand = require('./runCommand')
 runShellCommand = require('./runShellCommand')
@@ -27,8 +24,8 @@ module.exports = ClassicWidget = (widgetObject) ->
   implementation = {}
 
   init = (widget) ->
-    implementation = eval(widget.body)(widget.id);
-    implementation.id == widget.id
+    implementation = eval(widget.body);
+    implementation.id = widget.id
 
     implementation[k] ?= v for k, v of defaults
     implementation[k] ||= v for k, v of internalApi

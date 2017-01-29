@@ -1,5 +1,5 @@
-var Widget = require('./Widget');
-var rendered = {};
+var Widget = require('./ClassicWidget.coffee');
+var rendered = new Map();
 
 function isVisibleOnScreen(widgetId, screenId, state) {
   var settings = state.settings[widgetId] || {};
@@ -20,7 +20,7 @@ function isVisibleOnScreen(widgetId, screenId, state) {
 }
 
 function renderWidget(widget, domEl) {
-  var prevRendered = rendered[widget.id];
+  var prevRendered = rendered.get(widget.id);
 
   if (prevRendered && prevRendered.widget === widget) {
     return;
@@ -29,22 +29,23 @@ function renderWidget(widget, domEl) {
   } else {
     var instance = Widget(widget);
     domEl.appendChild(instance.create());
-    rendered[widget.id] = {
+    rendered.set(widget.id, {
       instance: instance,
       widget: widget,
-    };
+    });
   }
 }
 
-function destroyWidget(id) {
-  rendered[id].instance.destroy();
-  delete rendered[id];
+function destroyWidget(widget, id) {
+  widget.instance.destroy();
+  rendered.delete(id);
 }
 
 module.exports = function render(state, screen, domEl) {
-  var remaining = Object.keys(rendered);
+  let remaining = new Map(rendered);
+  let widgets = Object.keys(state.widgets);
 
-  for (var id in state.widgets) {
+  for (let id of widgets) {
     var widget = state.widgets[id];
     if (!isVisibleOnScreen(id, screen, state)) {
       continue;
@@ -56,13 +57,10 @@ module.exports = function render(state, screen, domEl) {
       renderWidget(widget, domEl);
     }
 
-    var idx = remaining.indexOf(widget.id);
-    if (idx > -1) {
-      remaining.splice(idx, 1);
-    }
+    remaining.delete(widget.id);
   }
 
-  remaining.forEach(function(obsolete) {
-    destroyWidget(obsolete);
+  remaining.forEach(function(value, key, map) {
+    destroyWidget(value, key);
   });
 };
