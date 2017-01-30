@@ -2,6 +2,36 @@
 
 const fs = require('fs');
 
+function addWidget(id, filePath, emit) {
+  WidgetBundle(id, filePath, (widget) => {
+    emit({type: 'added', widget: widget});
+  });
+}
+
+function removeWidget(id, filePath, emit) {
+  emit({type: 'removed', id: id});
+}
+
+function WidgetBundle(id, filePath, callback) {
+  fs.readFile(filePath, (error, data) => {
+    const widget = {
+      id: id,
+      filePath: filePath,
+      error: undefined,
+      body: undefined
+    };
+    
+    if(error !== null) {
+      widget.error = error.message ? error.message : String(error);
+    }
+    else {
+      widget.body = "(function(){return {" + data + "}})();";
+    }
+    
+    callback(widget);
+  });
+}
+
 module.exports = function WidgetBundler() {
   const api = {};
 
@@ -17,26 +47,6 @@ module.exports = function WidgetBundler() {
   api.close = function close() {
     
   };
-
-  function addWidget(id, filePath, emit) {
-    WidgetBundle(id, filePath, (widget) => {
-      emit({type: 'added', widget: widget});
-    });
-  }
-  
-  function removeWidget(id, filePath, emit) {
-    emit({type: 'removed', id: id});
-  }
-
-  function WidgetBundle(id, filePath, callback) {
-    const widget = {
-      id: id,
-      filePath: filePath,
-      body: "(function(){return {" + fs.readFileSync(filePath) + "}})();"
-    };
-    
-    callback(widget);
-  }
 
   return api;
 };
