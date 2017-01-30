@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const stream = require('stream');
 
 const indexHTML = fs.readFileSync(
   path.resolve(
@@ -12,7 +11,5 @@ const indexHTML = fs.readFileSync(
 );
 
 module.exports = function serveClient(req, res, next) {
-  const bufferStream = new stream.PassThrough();
-  bufferStream.pipe(res);
-  bufferStream.end(indexHTML);
+  res.end(indexHTML);
 };
